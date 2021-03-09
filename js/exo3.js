@@ -48,6 +48,27 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 camera.position.set(0,0,15);
 
+
+
+
+
+var posMarqueur = new THREE.BufferGeometry();
+posMarqueur.addAttribute('infoPos', new THREE.Float32BufferAttribute(infoPos, 3));
+posMarqueur.computeBoundingSphere();
+var materialMarqueur = new THREE.PointsMaterial({ 
+    size: 50, vertexColors: THREE.VertexColors 
+});
+points = new THREE.Points(posMarqueur, materialMarqueur);
+scene.add(points);
+
+
+
+
+
+
+
+
+
 var ambiantLight = new THREE.AmbientLight(0x888888);
 scene.add(ambiantLight);
 
@@ -96,11 +117,13 @@ scene.add(clouds);
 var earthNB = new THREE.Mesh(earthTextureNBGeometry, earthTextureNBMaterial);
 scene.add(earthNB);
 
+
 var render = function() {
-    earth.rotation.y += .0015;
-    clouds.rotation.y += .0025;
-    clouds.rotation.z += .00125;
-    earthNB.rotation.y += .0015;
+    earth.rotation.y += .0010;
+    clouds.rotation.y += .0015;
+    clouds.rotation.z += .00100;
+    earthNB.rotation.y += .0010;
+    points.rotation.y += .0010;
     renderer.render(scene, camera);
     requestAnimationFrame(render);
 };
