@@ -1,4 +1,4 @@
-/* récupération de la position en longitude et latitude*/
+/* récupération de ma position en longitude et latitude*/
 function getMyLatitude(position){
     lat = position.coords.latitude;
     document.getElementById("lat").innerHTML = lat;
@@ -25,6 +25,22 @@ if (navigator.geolocation) {
 var watchIdLat = navigator.geolocation.watchPosition(watchMyLatitude);
 var watchIdLong = navigator.geolocation.watchPosition(watchMyLongitude);
 
+/* récupération coordonnées pays */
+var requestURL = "https://restcountries.eu/rest/v2/all";
+var request = new XMLHttpRequest();
+request.open('GET', requestURL);
+request.responseType = 'json';
+request.send();
+/*request.onload = function() {
+    var countries = request.response;
+    countryHeader(countries);
+    showCountry(countries);
+}*/
+function countryHeader(jsonObj) {
+    var name = document.getElementById("pays").innerHTML;
+    name.textContent = 'Nom du pays: ' + jsonObj['name'];
+    header.appendChild(name);
+}
 
 /*to Cartesien*/
 var latitude = Math.PI * latitude / 180;
