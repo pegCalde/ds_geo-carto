@@ -1,82 +1,70 @@
 /* récupération de la position en longitude et latitude*/
-function getMyPosition(position) {
-    var infoPos = "<strong>Ma position actuelle: </strong><br><br>";
-    infoPos += "<strong>Latitude: </strong>" + position.coords.latitude + "<br>";
-    infoPos += "<strong>Longitude: </strong>" + position.coords.longitude + "<br>";
-    infoPos += "<strong>Date: </strong>" + new Date(position.timestamp);
-    document.getElementById("infoPos").innerHTML = infoPos;
+function getMyLatitude(position){
+    lat = position.coords.latitude;
+    document.getElementById("lat").innerHTML = lat;
+}
+function watchMyLatitude(position){
+    lat = position.coords.latitude;
 }
 
-function watchMyPosition(position) {
-    var infoPos = "Ma position actuelle: <br>";
-    infoPos += "Latitude: " + position.coords.latitude + "<br>";
-    infoPos += "Longitude: " + position.coords.longitude + "<br>";
-    document.getElementById("infoPos").innerHTML = infoPos;
+function getMyLongitude(position){
+    long = position.coords.longitude;
+    document.getElementById("long").innerHTML = long;
+}
+function watchMyLongitude(position){
+    long = position.coords.longitude;
 }
 
 if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(getMyPosition);
-} else {
+    navigator.geolocation.getCurrentPosition(getMyLatitude);
+    navigator.geolocation.getCurrentPosition(getMyLongitude);
+}else {
     "<h2>La géolocalisation n'est pas possible</h2>";
 }
 
-var watchId = navigator.geolocation.watchPosition(watchMyPosition);
+var watchIdLat = navigator.geolocation.watchPosition(watchMyLatitude);
+var watchIdLong = navigator.geolocation.watchPosition(watchMyLongitude);
 
-/* mettre un marqueur à notre position sur une carte avec leaflet
-var lat = 43.6877383;
-var lon = 7.211371;
-var maCarte = null;
 
-function initMap() {
-    maCarte = L.map('map').setView([lat, lon], 11);
-    L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
-            attribution: 'données © <a href="//osm.org/copyright">OpenStreetMap</a>/ODbL - rendu <a href="//openstreetmap.fr">OSM France</a>',
-            minZoom: 1,
-            maxZoom: 20
-        }).addTo(maCarte);
-        var marker = L.marker([lat, lon]).addTo(maCarte);
-    }
-    window.onload = function(){
-    initMap(); 
-*/
+/*to Cartesien*/
+var latitude = Math.PI * latitude / 180;
+var longitude = Math.PI * longitude / 180;
 
-/* scène three.js -> terre*/
+// adjust position by radians
+latitude -= 1.570795765134; // subtract 90 degrees (in radians)
+
+// and switch z and y NE FONCTIONNE PAS
+//xPos = (app.radius) * Math.sin(latitude) * Math.cos(longitude);
+//zPos = (app.radius) * Math.sin(latitude) * Math.sin(longitude);
+//yPos = (app.radius) * Math.cos(latitude);
+
+
+/* scène three.js*/
 var scene = new THREE.Scene();
-var camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 1, 1000);
+var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
 var renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
-camera.position.set(0,0,15);
+camera.position.set(0, 0, 25);
 
+/* marqueurs */
+marqueursPos = [];
 
+var marqueurPosGeometry = new THREE.IcosahedronBufferGeometry(7);
+var marqueurPosMaterial = new THREE.MeshPhongMaterial({
+    color: "green",
+    specular: 0x333333
+}); 
 
-
-
-var posMarqueur = new THREE.BufferGeometry();
-posMarqueur.addAttribute('infoPos', new THREE.Float32BufferAttribute(infoPos, 3));
-posMarqueur.computeBoundingSphere();
-var materialMarqueur = new THREE.PointsMaterial({ 
-    size: 50, vertexColors: THREE.VertexColors 
-});
-points = new THREE.Points(posMarqueur, materialMarqueur);
-scene.add(points);
-
-
-
-
-
-
-
-
-
+/* terre */
 var ambiantLight = new THREE.AmbientLight(0x888888);
 scene.add(ambiantLight);
 
 var directionalLight = new THREE.DirectionalLight(0xfdfcf0, 1);
-directionalLight.position.set(20,10,20);
+directionalLight.position.set(20, 10, 20);
 scene.add(directionalLight);
 
-var earthTextureGeometry = new THREE.SphereGeometry( 5, 50, 50 );
+var earthTextureGeometry = new THREE.SphereGeometry(5, 50, 50);
 var earthTextureMaterial = new THREE.MeshPhongMaterial({
     map: new THREE.ImageUtils.loadTexture("/img/earthTexture.jpg"),
     color: 0xaaaaaa,
@@ -84,25 +72,29 @@ var earthTextureMaterial = new THREE.MeshPhongMaterial({
     shininess: 25
 });
 
-var cloudsNBGeometry = new THREE.SphereGeometry(5.05,  50, 50);
+var cloudsNBGeometry = new THREE.SphereGeometry(5.05, 50, 50);
 var cloudsNBMaterial = new THREE.MeshPhongMaterial({
     map: new THREE.ImageUtils.loadTexture("/img/cloudsNB.png"),
     transparent: true,
-    opacity: 0.8
+    opacity: 0.7
 });
 
-var earthTextureNBGeometry = new THREE.SphereGeometry(5,  50, 50);
+var earthTextureNBGeometry = new THREE.SphereGeometry(5, 50, 50);
 var earthTextureNBMaterial = new THREE.MeshPhongMaterial({
     map: new THREE.ImageUtils.loadTexture("/img/earthTextureNB.jpg"),
     transparent: true,
-    opacity: 0.2,
+    opacity: 0.2
 });
+earthTextureNBMaterial.bumpScale = 1.0;
+
 
 var starsGeometry = new THREE.SphereGeometry(200, 50, 50);
 var starsMaterial = new THREE.MeshPhongMaterial({
-    map: new THREE.ImageUtils.loadTexture("/img/stars.png"),
-    side: THREE.DoubleSide,
-    shininess: 0
+    map: new THREE.ImageUtils.loadTexture("/img/wallpaperUnivers.jpg"),
+    side: THREE.BackSide,
+    shininess: 0,
+    transparent: true,
+    opacity: 0.5
 });
 
 var stars = new THREE.Mesh(starsGeometry, starsMaterial);
@@ -117,13 +109,31 @@ scene.add(clouds);
 var earthNB = new THREE.Mesh(earthTextureNBGeometry, earthTextureNBMaterial);
 scene.add(earthNB);
 
+/* ajout plusieurs marqueurs */
+for (let i = 0; i < 5; i++) {
+    const markP = new THREE.Mesh(marqueurPosGeometry, marqueurPosMaterial);
+    markP.scale.x = markP.scale.y = markP.scale.z = 0.05;
+    scene.add(markP);
+    marqueursPos.push(markP);
+}
 
-var render = function() {
+
+var render = function () {
     earth.rotation.y += .0010;
-    clouds.rotation.y += .0015;
-    clouds.rotation.z += .00100;
+    clouds.rotation.y += .0005;
+    clouds.rotation.z += .0005;
     earthNB.rotation.y += .0010;
-    points.rotation.y += .0010;
+
+    let angle = 0;
+    for (let i = 0; i < this.marqueursPos.length; i++) {
+        const marqueurPos = this.marqueursPos[i];
+        if (i > 0) {
+            marqueurPos.position.y = Math.sin(angle);
+            marqueurPos.position.x = Math.cos(angle) * 10;
+            marqueurPos.position.z = Math.sin(angle) * 10;
+        } 
+    }
+
     renderer.render(scene, camera);
     requestAnimationFrame(render);
 };
